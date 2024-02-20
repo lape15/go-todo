@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"net/http"
+
+	// "gorilla/mux"
+	"github.com/gorilla/mux"
 )
 
 type Todo struct {
@@ -17,21 +20,35 @@ var (
 )
 
 func main() {
-	http.HandleFunc("/todos", todoHandler)
-	http.HandleFunc("/", handleRequest)
-	http.ListenAndServe(":5000", nil)
+	r := mux.NewRouter()
+
+	r.HandleFunc("/todo/{id}", singleTodoHandler)
+	r.HandleFunc("/todos", todosHandler)
+	r.HandleFunc("/", handleRequest)
+	// http.Handle("/", r)
+	http.ListenAndServe(":5000", r)
 
 }
 
-func todoHandler(w http.ResponseWriter, req *http.Request) {
+func singleTodoHandler(w http.ResponseWriter, req *http.Request) {
+	fmt.Print("Crap")
+	switch req.Method {
+	case http.MethodPatch:
+		editTodo(w, req)
+	default:
+		fmt.Print(http.MethodPatch)
+		http.Error(w, "Method not allowed there", http.StatusMethodNotAllowed)
+	}
+}
 
+func todosHandler(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
 		getTodos(w, req)
 	case http.MethodPost:
 		createTodo(w, req)
 	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed here", http.StatusMethodNotAllowed)
 	}
 }
 

@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 func createTodo(w http.ResponseWriter, req *http.Request) {
@@ -56,7 +59,27 @@ func filterCompleted(allTodos []Todo) []Todo {
 }
 
 func editTodo(w http.ResponseWriter, req *http.Request) {
-	id := req.URL.Query().Get("id")
-	fmt.Print(id)
+	var todo Todo
+	// id, _ := strconv.Atoi(req.URL.Query().Get("id"))
+	vars := mux.Vars(req)
+	id, _ := strconv.Atoi(vars["id"])
+	if id == -1 {
+		http.Error(w, "Invalid todo ID", http.StatusBadRequest)
+		return
+	}
+	err := json.NewDecoder(req.Body).Decode(&todo)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	for i, v := range todos {
+		if v.ID == id {
+			todos[i] = todo
+			fmt.Printf("Todos %+v\n", v)
+		}
+	}
+	fmt.Print(len(todos))
 	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Updated Todo with ID %d\n", id)
 }
